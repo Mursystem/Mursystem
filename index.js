@@ -4,7 +4,7 @@ const path = require('path');
 const expressWs = require('express-ws');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // Use the environment variable 'PORT' if available, otherwise default to 3000
 
 // Enable WebSocket support
 const wsInstance = expressWs(app);
