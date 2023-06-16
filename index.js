@@ -9,7 +9,7 @@ wss.on('connection', (ws) => {
 
   // Event listener for incoming messages
   ws.on('message', (message) => {
-    console.log('Received message:', message);
+    console.log('Received message:', message.toString());
   });
 
   // Event listener for connection close
