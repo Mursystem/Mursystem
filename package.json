@@ -10,8 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "http-proxy": "^1.18.1",
-    "simple-peer": "^9.11.1",
     "uuid": "^9.0.0",
     "ws": "^8.13.0"
   }
