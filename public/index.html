@@ -11,7 +11,7 @@
     <script>
 
         // Connect using secure WebSocket (wss://) if the web page is served over HTTPS
-        socket = new WebSocket("wss://" + window.location.host + ":8080");
+        socket = new WebSocket("wss://" + window.location.host + ":3000");
 
         // Connection opened
         socket.addEventListener("open", function (event) {
