@@ -1,36 +1,27 @@
-const http = require('http');
-const WebSocket = require('ws');
+const express = require('express');
+const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
+const expressWs = require('express-ws');
 
+const app = express();
 const port = 3000;
 
-// Create HTTP server
-const server = http.createServer((req, res) => {
-  // Serve the 'index.html' file from the root URL
-  if (req.url === '/') {
-    const indexPath = path.join(__dirname, 'index.html');
-    fs.readFile(indexPath, 'utf8', (err, data) => {
-      if (err) {
-        res.statusCode = 500;
-        res.end('Internal Server Error');
-      } else {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/html');
-        res.end(data);
-      }
-    });
-  } else {
-    res.statusCode = 404;
-    res.end('Not Found');
-  }
+// Enable WebSocket support
+const wsInstance = expressWs(app);
+
+app.use(cors());
+
+// Serve the static files from the 'public' directory
+app.use(express.static('public'));
+
+// Serve the 'index.html' file from the root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Create WebSocket server
-const wss = new WebSocket.Server({ server });
-
-// WebSocket connection established
-wss.on('connection', (ws) => {
+// WebSocket endpoint
+app.ws('/websocket', (ws, req) => {
+  // WebSocket connection established
   console.log('WebSocket connection established');
 
   // Handle incoming messages
@@ -49,6 +40,6 @@ wss.on('connection', (ws) => {
   });
 });
 
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
