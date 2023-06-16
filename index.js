@@ -1,7 +1,12 @@
+const http = require('http');
+const httpProxy = require('http-proxy');
 const WebSocket = require('ws');
 
+// Create an HTTP server
+const server = http.createServer();
+
 // Create a WebSocket server
-const wss = new WebSocket.Server({ port: 3000 });
+const wss = new WebSocket.Server({ noServer: true });
 
 // Event listener for new connections
 wss.on('connection', (ws) => {
@@ -18,4 +23,14 @@ wss.on('connection', (ws) => {
   });
 });
 
-console.log('WebSocket server is running on port 3000.');
+// Proxy WebSocket upgrade requests
+server.on('upgrade', (req, socket, head) => {
+  wss.handleUpgrade(req, socket, head, (ws) => {
+    wss.emit('connection', ws, req);
+  });
+});
+
+// Start the HTTP server
+server.listen(8080, () => {
+  console.log('Reverse proxy server is running on port 8080.');
+});

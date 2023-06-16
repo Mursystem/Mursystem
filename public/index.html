@@ -11,8 +11,8 @@
     <script>
 
         // Connect using secure WebSocket (wss://) if the web page is served over HTTPS
-        //socket = new WebSocket("ws://magic-websocket.onrender.com:3000");
-        socket = new WebSocket("ws://localhost:3000");
+        socket = new WebSocket("ws://magic-websocket.onrender.com");
+        //socket = new WebSocket("ws://localhost:3000");
         // Connection opened
         socket.addEventListener("open", function (event) {
             console.log("Connected to the WebSocket server.");
