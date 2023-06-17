@@ -88,12 +88,17 @@
 
       socket.addEventListener('message', (event) => {
         const message = event.data;
-        // Parse the message
-        const parsedMessage = JSON.parse(message);
-        console.log(parsedMessage.type);
+
         // Check the message type
-        if (parsedMessage.type === 'offer') {
-          console.log("FUCKING ACE!");
+        try {
+          const parsedMessage = JSON.parse(message);
+          console.log(parsedMessage.type);
+          // Check the message type
+          if (parsedMessage.type === 'offer') {
+            console.log('FUCKING ACE!');
+          }
+        } catch (error) {
+          console.error('Error parsing message:', error);
         }
       });
 
