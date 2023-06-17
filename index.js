@@ -53,7 +53,7 @@ wss.on('connection', (ws) => {
     const parsedMessage = JSON.parse(message);
     console.log(`Received message from ${userId}:`, parsedMessage);
 
-    if (parsedMessage.type === 'offer' && parsedMessage.sender === 'peerA') {
+    if (parsedMessage.type === 'offer') {
       broadcast(JSON.stringify(parsedMessage));
     }
 
