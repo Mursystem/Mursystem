@@ -33,9 +33,6 @@ wss.on('connection', (ws) => {
   // Event listener for incoming messages
   ws.on('message', (message) => {
     console.log(`Received message from ${userId}:`, message);
-
-    // Example: broadcast the received message to all clients
-    broadcast({ type: 'message', userId, message });
   });
 
   // Event listener for connection close
