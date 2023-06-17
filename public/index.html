@@ -31,14 +31,7 @@
 
       socket.addEventListener('message', (event) => {
         const message = event.data;
-
-        // Parse the message
-        const parsedMessage = JSON.parse(message);
-
-        // Check if the message is from another user
-        if (parsedMessage.sender !== socket.id) {
-          console.log('Received message:', parsedMessage.message);
-        }
+        console.log('Received message:', message);
       });
 
       socket.addEventListener('close', (event) => {
@@ -48,13 +41,9 @@
       return socket;
     }
 
-    function initialize() {
-      
-    }
-
-    initialize();
     const socket = connectWebSocket();
-  </script>
+ 
+ </script>
 </body>
 
 </html>

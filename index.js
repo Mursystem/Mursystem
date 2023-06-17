@@ -6,6 +6,8 @@ const wss = new WebSocket.Server({ port: 3000 });
 
 // Store connected clients
 const clients = new Set();
+let peerA = null;
+let peerB = null;
 
 // Broadcast a message to all connected clients
 function broadcast(message) {
@@ -24,6 +26,22 @@ wss.on('connection', (ws) => {
   // Add the new client to the set of connected clients
   clients.add(ws);
 
+  // Check if both peers are already connected
+  if (peerA && peerB) {
+    ws.send(JSON.stringify({ type: 'reject', message: 'Maximum connections reached.' }));
+    ws.close();
+    return;
+  }
+
+  // Set the role for the current peer
+  if (!peerA) {
+    peerA = userId;
+    ws.send(JSON.stringify({ type: 'role', role: 'peerA' }));
+  } else if (!peerB) {
+    peerB = userId;
+    ws.send(JSON.stringify({ type: 'role', role: 'peerB' }));
+  }
+
   // Send a welcome message to the new user
   ws.send(JSON.stringify({ type: 'welcome', message: `Welcome! Your ID is: ${userId}` }));
 
@@ -41,6 +59,13 @@ wss.on('connection', (ws) => {
 
     clients.delete(ws);
     broadcast({ type: 'leave', userId });
+
+    // Reset the role if a peer disconnects
+    if (userId === peerA) {
+      peerA = null;
+    } else if (userId === peerB) {
+      peerB = null;
+    }
   });
 });
 
