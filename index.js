@@ -66,7 +66,7 @@ wss.on('connection', (ws) => {
 
       // Send the offer to Peer B
       if (peerBConnection) {
-        peerBConnection.send(JSON.stringify(parsedMessage));
+        peerBConnection.send((parsedMessage));
       }
     }
 

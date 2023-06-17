@@ -66,7 +66,7 @@
         if (localConnection.iceGatheringState === 'complete') {
           console.log('ICE gathering complete! Send your offer now.');
           // Send your offer here
-          socket.send(JSON.stringify(localConnection.localDescription));
+          socket.send(localConnection.localDescription);
         }
       };
 
