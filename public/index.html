@@ -32,6 +32,21 @@
       socket.addEventListener('message', (event) => {
         const message = event.data;
         console.log('Received message:', message);
+
+        // Parse the message
+        const parsedMessage = JSON.parse(message);
+
+        // Check the message type
+        if (parsedMessage.type === 'role') {
+          // Check if the role is for Peer A
+          if (parsedMessage.role === 'peerA') {
+            handlePeerA();
+          }
+          // Check if the role is for Peer B
+          else if (parsedMessage.role === 'peerB') {
+            handlePeerB();
+          }
+        }
       });
 
       socket.addEventListener('close', (event) => {
@@ -41,9 +56,72 @@
       return socket;
     }
 
+    function handlePeerA() {
+      console.log('You are Peer A');
+      const localConnection = new RTCPeerConnection(iceConfiguration);
+
+
+      // Listen for the icegatheringstatechange event
+      localConnection.onicegatheringstatechange = e => {
+        if (localConnection.iceGatheringState === 'complete') {
+          console.log('ICE gathering complete! Send your offer now.');
+          // Send your offer here
+          socket.send(JSON.stringify(localConnection.localDescription));
+        }
+      };
+
+      // Show ice candidates
+      localConnection.onicecandidate = e => {
+        console.log('NEW ice candidate!! on localconnection reprinting SDP');
+        console.log(JSON.stringify(localConnection.localDescription));
+      };
+
+
+
+      const sendChannel = localConnection.createDataChannel("sendChannel");
+      sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
+      sendChannel.onopen = e => console.log("open!!!!");
+      sendChannel.onclose = e => console.log("closed!!!!!!");
+
+
+      localConnection.createOffer().then(o => localConnection.setLocalDescription(o))
+    }
+
+    function handlePeerB() {
+      console.log('You are Peer B');
+      function createRemote(offer) {
+        const remoteConnection = new RTCPeerConnection(iceConfiguration);
+
+        remoteConnection.onicecandidate = e => {
+          console.log(" NEW ice candidnat!! on localconnection reprinting SDP ")
+          console.log(JSON.stringify(remoteConnection.localDescription))
+        }
+
+
+        remoteConnection.ondatachannel = e => {
+
+          const receiveChannel = e.channel;
+          receiveChannel.onmessage = e => console.log("messsage received!!!" + e.data)
+          receiveChannel.onopen = e => console.log("open!!!!");
+          receiveChannel.onclose = e => console.log("closed!!!!!!");
+          remoteConnection.channel = receiveChannel;
+
+        }
+
+
+        remoteConnection.setRemoteDescription(offer).then(a => console.log("done"))
+
+        //create answer
+        async function createAnswer() {
+          await remoteConnection.createAnswer().then(a => remoteConnection.setLocalDescription(a)).then(a =>
+            console.log(JSON.stringify(remoteConnection.localDescription)))
+          //send the answer to the 
+        }
+      };
+    }
+
     const socket = connectWebSocket();
- 
- </script>
+  </script>
 </body>
 
 </html>
