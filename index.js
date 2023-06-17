@@ -50,29 +50,15 @@ wss.on('connection', (ws) => {
 
   // Event listener for incoming messages
   ws.on('message', (message) => {
-  
-    // Check if the message is an offer from Peer A
     const parsedMessage = JSON.parse(message);
     console.log(`Received message from ${userId}:`, parsedMessage);
-    if (parsedMessage.type === 'offer' && parsedMessage.sender === 'peerA') {
-      // Find the WebSocket connection of Peer B
-      const peerBConnection = Array.from(clients).find((client) => {
-        // Skip the connection of Peer A
-        if (client !== ws && clients.has(client)) {
-          const clientUserId = client._socket.remoteAddress + ':' + client._socket.remotePort;
-          return clientUserId === peerB;
-        }
-        return false;
-      });
 
-      // Send the offer to Peer B
-      if (peerBConnection) {
-        peerBConnection.send(JSON.stringify(parsedMessage));
-        
-      }
+    if (parsedMessage.type === 'offer' && parsedMessage.sender === 'peerA') {
+      broadcast(JSON.stringify(parsedMessage));
     }
 
   });
+
 
   // Event listener for connection close
   ws.on('close', () => {
