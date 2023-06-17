@@ -10,7 +10,7 @@ const clients = new Set();
 // Broadcast a message to all connected clients
 function broadcast(message) {
   clients.forEach((client) => {
-    client.send(message);
+    client.send(JSON.stringify(message));
   });
 }
 
@@ -25,25 +25,25 @@ wss.on('connection', (ws) => {
   clients.add(ws);
 
   // Send a welcome message to the new user
-  ws.send(`Welcome! Your ID is: ${userId}`);
+  ws.send(JSON.stringify({ type: 'welcome', message: `Welcome! Your ID is: ${userId}` }));
 
   // Notify all clients that a new user has joined
-  broadcast(`User ${userId} has joined.`);
+  broadcast({ type: 'join', userId });
 
   // Event listener for incoming messages
   ws.on('message', (message) => {
     console.log(`Received message from ${userId}:`, message);
 
     // Example: broadcast the received message to all clients
-    broadcast(`User ${userId} says: ${message}`);
+    broadcast({ type: 'message', userId, message });
   });
 
   // Event listener for connection close
   ws.on('close', () => {
     console.log(`Client ${userId} disconnected.`);
-    
+
     clients.delete(ws);
-    broadcast(`User ${userId} has left.`);
+    broadcast({ type: 'leave', userId });
   });
 });
 

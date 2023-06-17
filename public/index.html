@@ -2,35 +2,59 @@
 <html>
 
 <head>
-    <title>WebSocket Example</title>
+  <title>WebSocket Example</title>
 </head>
 
 <body>
-    <h1>WebSocket Example</h1>
+  <h1>WebSocket Example</h1>
 
-    <script>
+  <script>
+    const iceConfiguration = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' }
+      ]
+    };
 
-        // Connect using secure WebSocket (wss://) if the web page is served over HTTPS
-        socket = new WebSocket("wss://magic-websocket.onrender.com");
-        //socket = new WebSocket("ws://localhost:3000");
-        // Connection opened
-        socket.addEventListener("open", function (event) {
-            console.log("Connected to the WebSocket server.");
+    function connectWebSocket() {
+      const socket = new WebSocket('wss://magic-websocket.onrender.com');
 
-            // Send a message
-            socket.send("Hello, WebSocket!");
-        });
+      socket.addEventListener('open', (event) => {
+        console.log('Connected to the WebSocket server.');
 
-        // Listen for messages
-        socket.addEventListener("message", function (event) {
-            console.log("Received message:", event.data);
-        });
+        // Send a message
+        socket.send('Hello, WebSocket!');
+      });
 
-        // Connection closed
-        socket.addEventListener("close", function (event) {
-            console.log("Disconnected from the WebSocket server.");
-        });
-    </script>
+      socket.addEventListener('message', (event) => {
+        const message = event.data;
+
+        // Parse the message
+        const parsedMessage = JSON.parse(message);
+
+        // Check if the message is from another user
+        if (parsedMessage.sender !== socket.id) {
+          console.log('Received message:', parsedMessage.message);
+        }
+      });
+
+      socket.addEventListener('close', (event) => {
+        console.log('Disconnected from the WebSocket server.');
+      });
+
+      return socket;
+    }
+
+    function initialize() {
+      
+    }
+
+    initialize();
+    const socket = connectWebSocket();
+  </script>
 </body>
 
 </html>
