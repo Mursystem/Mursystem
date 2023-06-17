@@ -29,8 +29,6 @@
 
       socket.addEventListener('message', (event) => {
         const message = event.data;
-        console.log('Received message:', message);
-
         // Parse the message
         const parsedMessage = JSON.parse(message);
 
@@ -87,6 +85,20 @@
 
     function handlePeerB() {
       console.log('You are Peer B');
+
+      socket.addEventListener('message', (event) => {
+        const message = event.data;
+        // Parse the message
+        const parsedMessage = JSON.parse(message);
+        console.log(parsedMessage.type);
+        // Check the message type
+        if (parsedMessage.type === 'offer') {
+          console.log("FUCKING ACE!");
+        }
+      });
+
+
+
       function createRemote(offer) {
         const remoteConnection = new RTCPeerConnection(iceConfiguration);
 
@@ -105,7 +117,6 @@
           remoteConnection.channel = receiveChannel;
 
         }
-
 
         remoteConnection.setRemoteDescription(offer).then(a => console.log("done"))
 
