@@ -62,14 +62,14 @@
         if (localConnection.iceGatheringState === 'complete') {
           console.log('ICE gathering complete! Send your offer now.');
           // Send your offer here
-          socket.send(JSON.stringify(localConnection.localDescription));
+          socket.send(JSON.stringify({ type: 'offer', offer: localConnection.localDescription.sdp }));
         }
       };
 
       // Show ice candidates
       localConnection.onicecandidate = e => {
         console.log('NEW ice candidate!! on localconnection reprinting SDP');
-        console.log(JSON.stringify(localConnection.localDescription));
+        //console.log(JSON.stringify(localConnection.localDescription));
       };
 
 
@@ -95,7 +95,7 @@
           console.log(parsedMessage.type);
           // Check the message type
           if (parsedMessage.type === 'offer') {
-            console.log('FUCKING ACE!');
+            console.log(parsedMessage.offer);
           }
         } catch (error) {
           console.error('Error parsing message:', error);

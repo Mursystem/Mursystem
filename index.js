@@ -54,7 +54,7 @@ wss.on('connection', (ws) => {
     console.log(`Received message from ${userId}:`, parsedMessage);
 
     if (parsedMessage.type === 'offer') {
-      broadcast({ type: 'offer', message });
+      broadcast({ type: 'offer', offer: parsedMessage.offer });
     }
 
   });
