@@ -48,8 +48,26 @@
     }
 
     function handlePeerA() {
-      console.log('You are Peer A');
       const localConnection = new RTCPeerConnection(iceConfiguration);
+      
+      console.log('You are Peer A');
+      socket.addEventListener('message', (event) => {
+        const message = event.data;
+        // Check the message type
+        try {
+          const parsedMessage = JSON.parse(message);
+          console.log(parsedMessage.type);
+          // Check the message type
+          if (parsedMessage.type === 'answer') {
+            console.log(parsedMessage.answer);
+            const answerDescription = new RTCSessionDescription({ type: 'answer', sdp: parsedMessage.answer });
+            localConnection.setRemoteDescription(answerDescription).then(a=>console.log("The end of RTC setup, all done!"))
+          }
+        } catch (error) {
+          console.error('Error parsing message:', error);
+        }
+      });
+      
       // Listen for the icegatheringstatechange event
       localConnection.onicegatheringstatechange = e => {
         if (localConnection.iceGatheringState === 'complete') {
