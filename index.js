@@ -8,12 +8,24 @@ const wss = new WebSocket.Server({ port: 3000 });
 const clients = new Set();
 let peerA = null;
 let peerB = null;
+let offerToPeerB = null;
 
 // Broadcast a message to all connected clients
 function broadcast(message) {
   clients.forEach((client) => {
     client.send(JSON.stringify(message));
   });
+}
+
+// Send the offer to Peer B
+function sendOfferToPeerB() {
+  if (offerToPeerB && peerB) {
+    const peerBClient = Array.from(clients).find((client) => client.userId === peerB);
+    if (peerBClient) {
+      peerBClient.send(JSON.stringify({ type: 'offer', offer: offerToPeerB }));
+      offerToPeerB = null; // Clear the stored offer
+    }
+  }
 }
 
 // Event listener for new connections
@@ -25,6 +37,7 @@ wss.on('connection', (ws) => {
 
   // Add the new client to the set of connected clients
   clients.add(ws);
+  ws.userId = userId; // Assign the userId property to the WebSocket object
 
   // Check if both peers are already connected
   if (peerA && peerB) {
@@ -40,6 +53,7 @@ wss.on('connection', (ws) => {
   } else if (!peerB) {
     peerB = userId;
     ws.send(JSON.stringify({ type: 'role', role: 'peerB' }));
+    sendOfferToPeerB();
   }
 
   // Send a welcome message to the new user
@@ -53,12 +67,11 @@ wss.on('connection', (ws) => {
     const parsedMessage = JSON.parse(message);
     console.log(`Received message from ${userId}:`, parsedMessage);
 
-    if (parsedMessage.type === 'offer') {
-      broadcast({ type: 'offer', offer: parsedMessage.offer });
+    if (parsedMessage.type === 'offer' && userId === peerA) {
+      offerToPeerB = parsedMessage.offer;
+      sendOfferToPeerB();
     }
-
   });
-
 
   // Event listener for connection close
   ws.on('close', () => {
