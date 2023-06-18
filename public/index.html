@@ -9,6 +9,7 @@
   <h1>WebSocket Example</h1>
 
   <script>
+    const socket = connectWebSocket();
     const iceConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -21,17 +22,13 @@
 
     function connectWebSocket() {
       const socket = new WebSocket('wss://magic-websocket.onrender.com');
-
       socket.addEventListener('open', (event) => {
         console.log('Connected to the WebSocket server.');
-
       });
-
       socket.addEventListener('message', (event) => {
         const message = event.data;
         // Parse the message
         const parsedMessage = JSON.parse(message);
-
         // Check the message type
         if (parsedMessage.type === 'role') {
           // Check if the role is for Peer A
@@ -44,19 +41,15 @@
           }
         }
       });
-
       socket.addEventListener('close', (event) => {
         console.log('Disconnected from the WebSocket server.');
       });
-
       return socket;
     }
 
     function handlePeerA() {
       console.log('You are Peer A');
       const localConnection = new RTCPeerConnection(iceConfiguration);
-
-
       // Listen for the icegatheringstatechange event
       localConnection.onicegatheringstatechange = e => {
         if (localConnection.iceGatheringState === 'complete') {
@@ -65,30 +58,22 @@
           socket.send(JSON.stringify({ type: 'offer', offer: localConnection.localDescription.sdp }));
         }
       };
-
       // Show ice candidates
       localConnection.onicecandidate = e => {
         console.log('NEW ice candidate!! on localconnection reprinting SDP');
         //console.log(JSON.stringify(localConnection.localDescription));
       };
-
-
-
       const sendChannel = localConnection.createDataChannel("sendChannel");
       sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
       sendChannel.onopen = e => console.log("open!!!!");
       sendChannel.onclose = e => console.log("closed!!!!!!");
-
-
       localConnection.createOffer().then(o => localConnection.setLocalDescription(o))
     }
 
     function handlePeerB() {
       console.log('You are Peer B');
-
       socket.addEventListener('message', (event) => {
         const message = event.data;
-
         // Check the message type
         try {
           const parsedMessage = JSON.parse(message);
@@ -96,23 +81,19 @@
           // Check the message type
           if (parsedMessage.type === 'offer') {
             console.log(parsedMessage.offer);
+            createRemote(parsedMessage.offer);
           }
         } catch (error) {
           console.error('Error parsing message:', error);
         }
       });
 
-
-
       function createRemote(offer) {
         const remoteConnection = new RTCPeerConnection(iceConfiguration);
-
         remoteConnection.onicecandidate = e => {
           console.log(" NEW ice candidnat!! on localconnection reprinting SDP ")
           console.log(JSON.stringify(remoteConnection.localDescription))
         }
-
-
         remoteConnection.ondatachannel = e => {
 
           const receiveChannel = e.channel;
@@ -120,21 +101,30 @@
           receiveChannel.onopen = e => console.log("open!!!!");
           receiveChannel.onclose = e => console.log("closed!!!!!!");
           remoteConnection.channel = receiveChannel;
-
         }
-
-        remoteConnection.setRemoteDescription(offer).then(a => console.log("done"))
-
+        const remoteDescription = new RTCSessionDescription({ type: "offer", sdp: offer });
+        remoteConnection.setRemoteDescription(remoteDescription).then(a => createAnswer());
         //create answer
         async function createAnswer() {
-          await remoteConnection.createAnswer().then(a => remoteConnection.setLocalDescription(a)).then(a =>
-            console.log(JSON.stringify(remoteConnection.localDescription)))
-          //send the answer to the 
+          remoteConnection
+            .createAnswer()
+            .then((answer) => {
+              return remoteConnection.setLocalDescription(answer);
+            })
+            .then(() => {
+              console.log(remoteConnection.localDescription);
+              socket.send(JSON.stringify({ type: 'answer', answer: remoteConnection.localDescription.sdp }));
+            })
+            .catch((error) => {
+              console.error('Error creating answer:', error);
+            });
         }
+
+
       };
     }
 
-    const socket = connectWebSocket();
+
   </script>
 </body>
 
