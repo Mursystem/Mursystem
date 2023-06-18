@@ -44,10 +44,10 @@ wss.on('connection', (ws) => {
     const parsedMessage = JSON.parse(message);
     console.log(`Received message from ${userId}:`, parsedMessage);
     if (parsedMessage.type === 'offer') {
-      savedOffer = { type: 'offer', offer: parsedMessage.offer };
+      savedOffer = parsedMessage.offer;
     }
     if (parsedMessage.type === 'ready') {
-      broadcast(JSON.stringify(savedOffer));
+      broadcast({ type: 'offer', offer: savedOffer });
     }
     if (parsedMessage.type === 'answer') {
       broadcast({ type: 'answer', answer: parsedMessage.answer });
