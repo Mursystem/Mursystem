@@ -48,7 +48,7 @@ wss.on('connection', (ws) => {
     }
     if (parsedMessage.type === 'ready') {
       if (parsedMessage.peer = "peerA") {
-        broadcast({ type: 'offer', offer: savedOffer });
+        //broadcast({ type: 'offer', offer: savedOffer });
       }
       if (parsedMessage.peer == "peerB") {
         broadcast({ type: 'offer', offer: savedOffer });
