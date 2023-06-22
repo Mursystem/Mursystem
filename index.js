@@ -26,7 +26,7 @@ wss.on('connection', (ws) => {
   if (!peerA) {
     peerA = ws;
     peerA.on('message', (message) => {
-      const parsedMessage = JSON.parse(message);
+      let parsedMessage = JSON.parse(message);
       if (parsedMessage.type === 'offer') {
         savedOffer = parsedMessage.offer;
       }
@@ -35,7 +35,6 @@ wss.on('connection', (ws) => {
       }
     });
     peerA.on('close', () => {
-      peerB.send({ type: 'leave', message: "peer A left" });
       peerA = null;
     })
     ws.send(JSON.stringify({ type: 'role', role: 'peerA' }));
@@ -43,14 +42,13 @@ wss.on('connection', (ws) => {
   } else if (!peerB) {
     peerB = ws;
     peerB.on('message', (message) => {
-      const parsedMessage = JSON.parse(message);
+      let parsedMessage = JSON.parse(message);
       if (parsedMessage.type === 'ready') {
         peerB.send({ type: 'offer', offer: savedOffer });
       }
     });
     peerB.on('close', () => {
-      peerA.send({ type: 'leave', message: "peer B left" });
-      peerA = null;
+      peerB = null;
     })
     ws.send(JSON.stringify({ type: 'role', role: 'peerB' }));
     ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
