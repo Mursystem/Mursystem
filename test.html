@@ -60,11 +60,27 @@
                         handlePeerB(parsedMessage.offer);
                     }
                 }
+                if (parsedMessage.type === 'answer') {
+                    if (who == "peerA") {
+                        console.log('answer detected on PeerA');
+                        handleAnswer(parsedMessage.answer);
+                    }
+                }
             });
             socket.addEventListener('close', (event) => {
                 console.log('Disconnected from the WebSocket server.');
             });
             return socket;
+        }
+
+        function handleAnswer(answer) {
+            localConnection.setRemoteDescription({ type: "answer", sdp: answer })
+                .then(() => {
+                    console.log("Remote description set successfully on PeerA");
+                })
+                .catch(error => {
+                    console.error('Error setting remote description:', error);
+                });
         }
 
         function handlePeerA() {
@@ -98,44 +114,41 @@
                 }
             };
         }
+        // ...
 
         function handlePeerB(sdp) {
-
             console.log("Peer B - Step 2");
 
-
             remoteConnection = new RTCPeerConnection(iceConfiguration);
-            remoteConnection.setRemoteDescription({ type: "offer", sdp: sdp })
-                .then(() => {
-                    console.log("Remote description set successfully!");
-                })
-                .catch(error => {
-                    console.error('Error setting remote description:', error);
-                })
+
             remoteConnection.onicecandidate = e => {
                 console.log("NEW ice candidate!! on remoteConnection reprinting SDP");
             };
-            // Set up the data channel for text chat
+
             remoteConnection.ondatachannel = e => {
                 receiveChannel = e.channel;
-                //receiveChannel.onmessage = receiveMessage;
                 receiveChannel.onopen = () => console.log("Data channel opened!");
                 receiveChannel.onclose = () => console.log("Data channel closed!");
             };
-            remoteConnection.onnegotiationneeded = async () => {
-                try {
-                    const answer = await remoteConnection.createAnswer();
-                    await remoteConnection.setLocalDescription(answer);
+
+            remoteConnection.setRemoteDescription({ type: "offer", sdp: sdp })
+                .then(() => {
+                    console.log("Remote description set successfully!");
+                    return remoteConnection.createAnswer();
+                })
+                .then(answer => {
+                    return remoteConnection.setLocalDescription(answer);
+                })
+                .then(() => {
                     socket.send(JSON.stringify({ type: 'answer', answer: remoteConnection.localDescription.sdp }));
                     console.log('Sent Answer!');
-                } catch (error) {
-                    console.error('Error creating answer:', error);
-                }
-            };
-            //send a ready message to server to get the offer sent
-
+                })
+                .catch(error => {
+                    console.error('Error setting remote description or creating answer:', error);
+                });
         }
 
+// ...
 
 
     </script>
