@@ -41,6 +41,9 @@
                 // Parse the message
                 const parsedMessage = JSON.parse(message);
                 // Check the message type
+                if (parsedMessage.type === 'welcome') {
+                    console.log(parsedMessage.message);
+                }
                 if (parsedMessage.type === 'role') {
                     // Check if the role is for Peer A
                     if (parsedMessage.role === 'peerA') {
@@ -53,13 +56,11 @@
                     }
                 }
                 if (parsedMessage.type === 'offer') {
-                    if (who == "peerB"){
+                    if (who == "peerB") {
                         handlePeerB(parsedMessage.offer);
                     }
                 }
             });
-
-
             socket.addEventListener('close', (event) => {
                 console.log('Disconnected from the WebSocket server.');
             });
@@ -96,14 +97,10 @@
                     console.log('ICE gathering complete! Send your offer now.');
                 }
             };
-
-
-
-
         }
 
         function handlePeerB(sdp) {
-            
+
             console.log("Peer B - Step 2");
 
 
@@ -136,10 +133,10 @@
                 }
             };
             //send a ready message to server to get the offer sent
-           
+
         }
-     
-       
+
+
 
     </script>
 </body>
