@@ -18,7 +18,7 @@
         let localConnection;
         let remoteConnection;
         let who = null;
-
+        let iceDone = null;
 
         const socket = connectWebSocket();
         const iceConfiguration = {
@@ -52,13 +52,18 @@
                     // Check if the role is for Peer B
                     else if (parsedMessage.role === 'peerB') {
                         handlePeerB();
-                       
-                       
                     }
                 }
                 if (parsedMessage.type === 'offer') {
                     if (who == "peerB") {
+                        console.log('Offer detected on peerB');
                         handleOffer(parsedMessage.offer);
+                    }
+                }
+                if (parsedMessage.type === 'request') {
+                    if (who == "peerA") {
+                        console.log('Request detected on peerB');
+                        localConnection.onnegotiationneeded();
                     }
                 }
                 if (parsedMessage.type === 'answer') {
@@ -79,7 +84,7 @@
 
             localConnection.setRemoteDescription({ type: "answer", sdp: answer })
                 .then(() => {
-                    console.log("Remote description set successfully on Peer A");
+                    console.log("Remote description set successfully on Peer A, All done!");
                 })
                 .catch(error => {
                     console.error('Error setting remote description:', error);
@@ -90,9 +95,17 @@
             remoteConnection.setRemoteDescription({ type: "offer", sdp: offer })
                 .then(() => {
                     console.log("Remote description set successfully!");
-                })
-                .then(answer => {
-                    remoteConnection.setLocalDescription(answer);
+
+                    remoteConnection.createAnswer()
+                        .then(answer => {
+                            remoteConnection.setLocalDescription(answer).then(e => {
+                                console.log("Local Description set");
+                                if (iceDone) {
+                                    socket.send(JSON.stringify({ type: 'answer', answer: remoteConnection.localDescription.sdp }));
+                                }
+                            })
+                        })
+
                 })
                 .catch(error => {
                     console.error('Error setting remote description or creating answer:', error);
@@ -104,14 +117,7 @@
             console.log("Peer A");
 
             localConnection = new RTCPeerConnection(iceConfiguration);
-
-            // Create a data channel
-            sendChannel = localConnection.createDataChannel("sendChannel");
-            sendChannel.onmessage = e => console.log("message received:", e.data);
-            sendChannel.onopen = () => console.log("data channel opened");
-            sendChannel.onclose = () => console.log("data channel closed");
-
-    /*         // Add the media stream to the connection
+            // Add the media stream to the connection
             navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 .then(stream => {
                     const localVideo = document.getElementById("localVideo");
@@ -122,7 +128,12 @@
                 })
                 .catch(error => {
                     console.error('Error accessing media devices:', error);
-                }); */
+                });
+            // Create a data channel
+            sendChannel = localConnection.createDataChannel("sendChannel");
+            sendChannel.onmessage = e => console.log("message received:", e.data);
+            sendChannel.onopen = () => console.log("data channel opened");
+            sendChannel.onclose = () => console.log("data channel closed");
 
             localConnection.onnegotiationneeded = async () => {
                 try {
@@ -152,23 +163,32 @@
         function handlePeerB() {
             who = "peerB";
             console.log("Peer B");
-
             remoteConnection = new RTCPeerConnection(iceConfiguration);
+            // Add the media stream to the connection
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    const localVideo = document.getElementById("localVideo");
+                    localVideo.srcObject = stream;
+                    stream.getTracks().forEach(track => {
+                        remoteConnection.addTrack(track, stream);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error accessing media devices:', error);
+                });
 
-            remoteConnection.onnegotiationneeded = async () => {
-                try {
-                    console.log('Sending answer to server');
-                    const answer = await remoteConnection.createAnswer();
-                    await remoteConnection.setLocalDescription(answer);
+            remoteConnection.onnegotiationneeded = e => {
+                console.log(e);
+                socket.send(JSON.stringify({ type: 'request', request: "send an offer"}));
+            }
+
+            remoteConnection.onicegatheringstatechange = event => {
+                console.log('ICE gathering state:', remoteConnection.iceGatheringState);
+                if (remoteConnection.iceGatheringState === 'complete') {
+                    iceDone = 'complete';
+                    console.log('ICE gathering complete! Send your answer now.');
                     socket.send(JSON.stringify({ type: 'answer', answer: remoteConnection.localDescription.sdp }));
-                } catch (error) {
-                    console.error('Error creating answer:', error);
                 }
-            };
-
-        
-            remoteConnection.onicecandidate = e => {
-                console.log("ICE candidate:", e.candidate);
             };
 
             remoteConnection.ondatachannel = e => {
@@ -180,30 +200,15 @@
                 remoteConnection.channel = receiveChannel;
             }
 
-
-      /*       navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then(stream => {
-                    const localVideo = document.getElementById("localVideo");
-                    localVideo.srcObject = stream;
-                    stream.getTracks().forEach(track => {
-                        remoteConnection.addTrack(track, stream);
-                    });
-
-                })
- */
-
             remoteConnection.ontrack = event => {
                 const remoteVideo = document.getElementById("remoteVideo");
                 if (!remoteVideo.srcObject) {
                     remoteVideo.srcObject = event.streams[0];
                 }
             };
+
+
         }
-
-
-
-// ...
-
 
     </script>
 </body>
