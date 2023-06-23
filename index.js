@@ -2,17 +2,11 @@ const WebSocket = require('ws');
 // Create a WebSocket server
 const wss = new WebSocket.Server({ port: 3000 });
 console.log('WebSocket server is running on port 3000.');
-// Store connected clients
-const clients = new Set();
+
 let peerA = null;
 let peerB = null;
 let savedOffer = null;
-// Broadcast a message to all connected clients
-function broadcast(message) {
-  clients.forEach((client) => {
-    client.send(JSON.stringify(message));
-  });
-}
+
 // Event listener for new connections
 wss.on('connection', (ws) => {
   console.log('A new client has connected.');
@@ -35,15 +29,15 @@ wss.on('connection', (ws) => {
       if (parsedMessage.type === 'offer' && !peerB) {
         savedOffer = parsedMessage.offer;
       }
-
-
     });
+    
     peerA.on('close', () => {
       peerA = null;
     });
 
     ws.send(JSON.stringify({ type: 'role', role: 'peerA' }));
     ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
+  
   } else if (!peerB) {
     peerB = ws;
 
@@ -66,12 +60,13 @@ wss.on('connection', (ws) => {
 
     ws.send(JSON.stringify({ type: 'role', role: 'peerB' }));
     ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
+    
     if (savedOffer) {
       peerB.send(JSON.stringify({ type: 'offer', offer: savedOffer }));
     }
   }
   // Send a welcome message to the new user
-  ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
+  ws.send(JSON.stringify({ type: 'welcome', message: 'A user has joined the room!' }));
 });
 
 
