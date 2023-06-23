@@ -52,9 +52,7 @@ wss.on('connection', (ws) => {
         peerA.send(JSON.stringify({ type: 'answer', answer: parsedMessage.answer }));
       }
     });
-    if (savedOffer){
-      peerB.send(JSON.stringify({ type: 'offer', offer: savedOffer }));
-    }
+
   
     peerB.on('close', () => {
       peerB = null;
@@ -62,6 +60,9 @@ wss.on('connection', (ws) => {
 
     ws.send(JSON.stringify({ type: 'role', role: 'peerB' }));
     ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
+    if (savedOffer){
+      peerB.send(JSON.stringify({ type: 'offer', offer: savedOffer }));
+    }
   }
   // Send a welcome message to the new user
   ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
