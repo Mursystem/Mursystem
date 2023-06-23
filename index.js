@@ -28,7 +28,8 @@ wss.on('connection', (ws) => {
 
     peerA.on('message', (message) => {
       let parsedMessage = JSON.parse(message);
-      if (parsedMessage.type === 'offer') {
+       
+      if (parsedMessage.type === 'offer' && peerB) {
         peerB.send(JSON.stringify({ type: 'offer', offer: parsedMessage.offer }));
       }
       
@@ -44,7 +45,7 @@ wss.on('connection', (ws) => {
 
     peerB.on('message', (message) => {
       let parsedMessage = JSON.parse(message);
-      if (parsedMessage.type === 'answer') {
+      if (parsedMessage.type === 'answer' && peerA) {
         peerA.send(JSON.stringify({ type: 'answer', answer: parsedMessage.answer }));
       }
     });
