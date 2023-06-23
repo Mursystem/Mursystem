@@ -32,6 +32,9 @@ wss.on('connection', (ws) => {
       if (parsedMessage.type === 'offer' && peerB) {
         peerB.send(JSON.stringify({ type: 'offer', offer: parsedMessage.offer }));
       }
+      if (parsedMessage.type === 'offer' && !peerB) {
+        savedOffer = parsedMessage.offer; 
+      }
       
     });
     peerA.on('close', () => {
@@ -49,7 +52,10 @@ wss.on('connection', (ws) => {
         peerA.send(JSON.stringify({ type: 'answer', answer: parsedMessage.answer }));
       }
     });
-
+    if (savedOffer){
+      peerB.send(JSON.stringify({ type: 'offer', offer: savedOffer }));
+    }
+  
     peerB.on('close', () => {
       peerB = null;
     });
