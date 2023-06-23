@@ -51,14 +51,13 @@
                     }
                     // Check if the role is for Peer B
                     else if (parsedMessage.role === 'peerB') {
-                        handlePeerB();
-                       
-                       
+                        who = "peerB";
+                        socket.send(JSON.stringify({ type: 'ready' }));
                     }
                 }
                 if (parsedMessage.type === 'offer') {
                     if (who == "peerB") {
-                        handleOffer(parsedMessage.offer);
+                        handlePeerB(parsedMessage.offer);
                     }
                 }
                 if (parsedMessage.type === 'answer') {
@@ -85,19 +84,6 @@
                     console.error('Error setting remote description:', error);
                 });
         }
-        function handleOffer(offer) {
-
-            remoteConnection.setRemoteDescription({ type: "offer", sdp: offer })
-                .then(() => {
-                    console.log("Remote description set successfully!");
-                })
-                .then(answer => {
-                    remoteConnection.setLocalDescription(answer);
-                })
-                .catch(error => {
-                    console.error('Error setting remote description or creating answer:', error);
-                });
-        }
 
         function handlePeerA() {
             who = "peerA";
@@ -111,7 +97,7 @@
             sendChannel.onopen = () => console.log("data channel opened");
             sendChannel.onclose = () => console.log("data channel closed");
 
-    /*         // Add the media stream to the connection
+            // Add the media stream to the connection
             navigator.mediaDevices.getUserMedia({ video: true, audio: true })
                 .then(stream => {
                     const localVideo = document.getElementById("localVideo");
@@ -122,7 +108,7 @@
                 })
                 .catch(error => {
                     console.error('Error accessing media devices:', error);
-                }); */
+                });
 
             localConnection.onnegotiationneeded = async () => {
                 try {
@@ -149,30 +135,20 @@
             };
         }
 
-        function handlePeerB() {
-            who = "peerB";
+        function handlePeerB(sdp) {
             console.log("Peer B");
 
             remoteConnection = new RTCPeerConnection(iceConfiguration);
-
-            remoteConnection.onnegotiationneeded = async () => {
-                try {
-                    console.log('Sending answer to server');
-                    const answer = await remoteConnection.createAnswer();
-                    await remoteConnection.setLocalDescription(answer);
-                    socket.send(JSON.stringify({ type: 'answer', answer: remoteConnection.localDescription.sdp }));
-                } catch (error) {
-                    console.error('Error creating answer:', error);
-                }
+            remoteConnection.onnegotiationneeded  = e => {
+                console.log("We need negotiotion!", e);
+                socket.send(JSON.stringify({ type: 'ready' }));
             };
-
-        
             remoteConnection.onicecandidate = e => {
                 console.log("ICE candidate:", e.candidate);
             };
 
             remoteConnection.ondatachannel = e => {
-
+                
                 receiveChannel = e.channel;
                 receiveChannel.onmessage = e => console.log("message received:", e.data);
                 receiveChannel.onopen = () => console.log("data channel opened");
@@ -180,17 +156,29 @@
                 remoteConnection.channel = receiveChannel;
             }
 
-
-      /*       navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            remoteConnection.setRemoteDescription({ type: "offer", sdp: sdp })
+                .then(() => {
+                    console.log("Remote description set successfully!");
+                    return navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                })
                 .then(stream => {
                     const localVideo = document.getElementById("localVideo");
                     localVideo.srcObject = stream;
                     stream.getTracks().forEach(track => {
                         remoteConnection.addTrack(track, stream);
                     });
-
+                    return remoteConnection.createAnswer();
                 })
- */
+                .then(answer => {
+                    return remoteConnection.setLocalDescription(answer);
+                })
+                .then(() => {
+                    socket.send(JSON.stringify({ type: 'answer', answer: remoteConnection.localDescription.sdp }));
+                    console.log('Sent Answer!');
+                })
+                .catch(error => {
+                    console.error('Error setting remote description or creating answer:', error);
+                });
 
             remoteConnection.ontrack = event => {
                 const remoteVideo = document.getElementById("remoteVideo");
