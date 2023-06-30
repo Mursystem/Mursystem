@@ -35,7 +35,7 @@ webSocketServer.on('connection', (newSocket) => {
       var connection = websocketArray.find(item => item.id === parsedMessage.room && item.role === parsedMessage.role);
       if (connection) {
         connection.ready = true;
-        if (checkBothReady) {
+        if (checkBothReady(parsedMessage.room)) {
           newSocket.send(JSON.stringify({ type: 'start', message: 'Starting, both are ready!', role: parsedMessage.role }));
         }
       }
@@ -44,18 +44,12 @@ webSocketServer.on('connection', (newSocket) => {
 });
 
 function checkBothReady(roomName) {
-  var oppositeRole = 'client';
-  var selectedRole = 'host';
   // Find the WebSocket connections for the current role and opposite role in the same room
-  var currentRoleConnections = websocketArray.filter(item => item.id === roomName && item.role === selectedRole);
-  var oppositeRoleConnections = websocketArray.filter(item => item.id === roomName && item.role === oppositeRole);
-  // Check if all connections for both roles are ready
-  var allReady = currentRoleConnections.every(connection => connection.ready) &&
-    oppositeRoleConnections.every(connection => connection.ready);
-  if (allReady) {
-    console.log('Both roles are ready!');
-  } else {
-    console.log('Both are not ready yet...');
+  var clientStatus = websocketArray.filter(item => item.id === roomName && item.role === 'client' && item.ready === true);
+  var hostStatus = websocketArray.filter(item => item.id === roomName && item.role === 'host' && item.ready === true);
+  let allReady = false;
+  if (clientStatus.length > 0 && hostStatus.length > 0) {
+    allReady = true;
   }
   return !!allReady
 }
