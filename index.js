@@ -46,8 +46,9 @@ webSocketServer.on('connection', (newSocket) => {
       if (connection) {
         connection.ready = true;
         if (checkBothReady(parsedMessage.room)) {
-          var msgToSend = JSON.stringify({ type: 'start', message: 'Starting, both are ready!', role: parsedMessage.role });
+          var msgToSend = JSON.stringify({ type: 'start', message: 'Starting, both are ready!' });
           sendMessageToWebSocket(parsedMessage.room, msgToSend, "host");
+          sendMessageToWebSocket(parsedMessage.room, msgToSend, "client");
         }
       }
     }
