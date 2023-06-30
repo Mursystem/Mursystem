@@ -36,7 +36,9 @@ webSocketServer.on('connection', (newSocket) => {
       if (connection) {
         connection.ready = true;
         if (checkBothReady(parsedMessage.room)) {
-          newSocket.send(JSON.stringify({ type: 'start', message: 'Starting, both are ready!', role: parsedMessage.role }));
+          var msgToSend = JSON.stringify({ type: 'start', message: 'Starting, both are ready!', role: parsedMessage.role });
+          sendMessageToWebSocket(parsedMessage.room, msgToSend, "host");
+          sendMessageToWebSocket(parsedMessage.room, msgToSend, "client");
         }
       }
     }
@@ -54,8 +56,8 @@ function checkBothReady(roomName) {
   return !!allReady
 }
 
-function sendMessageToWebSocket(roomName, message) {
-  var socket = websocketArray.find(item => item.id === roomName)?.socket;
+function sendMessageToWebSocket(roomName, message, role) {
+  var socket = websocketArray.find(item => item.id === roomName && item.role == role)?.socket;
   if (socket) {
     socket.send(message);
   }
