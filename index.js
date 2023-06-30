@@ -33,11 +33,11 @@ webSocketServer.on('connection', (newSocket) => {
       }
       // Add the WebSocket instance to the websocketArray
       websocketArray.push({ id: parsedMessage.room, socket: newSocket, role: parsedMessage.role });
-      newSocket.send(JSON.stringify({ type: 'welcome', message: 'Peer already connected.' }));
+      newSocket.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the room!', role: parsedMessage.role }));
     }
 
     if (parsedMessage.type === 'ready') {
-      console.log(parsedMessage.role, "is Ready!");
+      console.log(parsedMessage.role, "is ready!");
     }
   });
 });
