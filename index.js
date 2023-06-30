@@ -15,20 +15,30 @@ webSocketServer.on('connection', (newSocket) => {
     let parsedMessage = JSON.parse(message);
 
     if (parsedMessage.type === 'room') {
-      console.log(parsedMessage.room);
-      console.log(parsedMessage.role);
-
       // Check if the peer has already connected
       if (isPeerConnected(parsedMessage.room, parsedMessage.role)) {
         newSocket.send(JSON.stringify({ type: 'reject', message: 'Peer already connected.' }));
         newSocket.close();
         return;
       }
+      console.log(parsedMessage.room);
+      console.log(parsedMessage.role);
       // Add the WebSocket instance to the websocketArray
       websocketArray.push({ id: parsedMessage.room, socket: newSocket, role: parsedMessage.role, ready: false });
       newSocket.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the room!', role: parsedMessage.role }));
     }
-
+    if (parsedMessage.type === 'offerFromHost') {
+      msgToSend = JSON.stringify({ type: 'offerFromServer', offer: parsedMessage.offer });
+      sendMessageToWebSocket(parsedMessage.room, msgToSend, "client");
+    }
+    if (parsedMessage.type === 'answerFromClient') {
+      msgToSend = JSON.stringify({ type: 'answerFromServer', answer: parsedMessage.answer });
+      sendMessageToWebSocket(parsedMessage.room, msgToSend, "host");
+    }
+    if (parsedMessage.type === 'requestNewOffer') {
+      msgToSend = JSON.stringify({ type: 'request'});
+      sendMessageToWebSocket(parsedMessage.room, msgToSend, "host");
+    }
     if (parsedMessage.type === 'ready') {
       console.log(parsedMessage.role, "is ready!");
       // Find the WebSocket connection object in the array and update its ready property
@@ -69,59 +79,3 @@ function isPeerConnected(roomName, role) {
   //convert peer into booleen true/false
   return !!peer;
 }
-
-/*  
-  // Set the role for the current peer
-
- 
-    peerA.on('message', (message) => {
-      let parsedMessage = JSON.parse(message);
- 
-      if (parsedMessage.type === 'offer' && peerB) {
-        peerB.send(JSON.stringify({ type: 'offer', offer: parsedMessage.offer }));
-      }
-      if (parsedMessage.type === 'offer' && !peerB) {
-        savedOffer = parsedMessage.offer;
-      }
-    });
-    
-    peerA.on('close', () => {
-      peerA = null;
-    });
- 
-    ws.send(JSON.stringify({ type: 'role', role: 'peerA' }));
-    ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
-  
-  } else if (!peerB) {
-    peerB = ws;
- 
-    peerB.on('message', (message) => {
-      let parsedMessage = JSON.parse(message);
-     
-      if (parsedMessage.type === 'answer' && peerA) {
-        peerA.send(JSON.stringify({ type: 'answer', answer: parsedMessage.answer }));
-      }
-      if (parsedMessage.type === 'request') {
-        peerA.send(JSON.stringify({ type: 'request'}));
-      }
- 
-    }); 
- 
- 
-      peerB.on('close', () => {
-      peerB = null;
-    });
- 
-    ws.send(JSON.stringify({ type: 'role', role: 'peerB' }));
-    ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome!' }));
-    
-    if (savedOffer) {
-      peerB.send(JSON.stringify({ type: 'offer', offer: savedOffer }));
-    }
-  }
-  // Send a welcome message to the new user
-  ws.send(JSON.stringify({ type: 'welcome', message: 'A user has joined the room!' })); */
-
-
-
-
