@@ -8,13 +8,6 @@ let peerB = null;
 let savedOffer = null;
 let websocketArray = [];
 
-
-// Check if the peer in the same room has already connected
-function isPeerConnected(roomName, role) {
-  var peer = websocketArray.find(item => item.id === roomName && item.role === role);
-  return !!peer;
-}
-
 webSocketServer.on('connection', (newSocket) => {
   console.log('A new user has connected to the WebSocket.');
 
@@ -32,16 +25,40 @@ webSocketServer.on('connection', (newSocket) => {
         return;
       }
       // Add the WebSocket instance to the websocketArray
-      websocketArray.push({ id: parsedMessage.room, socket: newSocket, role: parsedMessage.role });
+      websocketArray.push({ id: parsedMessage.room, socket: newSocket, role: parsedMessage.role, ready: false });
       newSocket.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the room!', role: parsedMessage.role }));
     }
 
     if (parsedMessage.type === 'ready') {
       console.log(parsedMessage.role, "is ready!");
+      // Find the WebSocket connection object in the array and update its ready property
+      var connection = websocketArray.find(item => item.id === parsedMessage.room && item.role === parsedMessage.role);
+      if (connection) {
+        connection.ready = true;
+        if (checkBothReady) {
+          newSocket.send(JSON.stringify({ type: 'start', message: 'Starting, both are ready!', role: parsedMessage.role }));
+        }
+      }
     }
   });
 });
 
+function checkBothReady(roomName) {
+  var oppositeRole = 'client';
+  var selectedRole = 'host';
+  // Find the WebSocket connections for the current role and opposite role in the same room
+  var currentRoleConnections = websocketArray.filter(item => item.id === roomName && item.role === selectedRole);
+  var oppositeRoleConnections = websocketArray.filter(item => item.id === roomName && item.role === oppositeRole);
+  // Check if all connections for both roles are ready
+  var allReady = currentRoleConnections.every(connection => connection.ready) &&
+    oppositeRoleConnections.every(connection => connection.ready);
+  if (allReady) {
+    console.log('Both roles are ready!');
+  } else {
+    console.log('Both are not ready yet...');
+  }
+  return !!allReady
+}
 
 function sendMessageToWebSocket(roomName, message) {
   var socket = websocketArray.find(item => item.id === roomName)?.socket;
@@ -50,6 +67,12 @@ function sendMessageToWebSocket(roomName, message) {
   }
 }
 
+// Check if the peer in the same room has already connected
+function isPeerConnected(roomName, role) {
+  var peer = websocketArray.find(item => item.id === roomName && item.role === role);
+  //convert peer into booleen true/false
+  return !!peer;
+}
 
 /*  
   // Set the role for the current peer
