@@ -3,11 +3,7 @@ const WebSocket = require('ws');
 const webSocketServer = new WebSocket.Server({ port: 3000 });
 console.log('WebSocket server is running on port 3000.');
 
-let peerA = null;
-let peerB = null;
-let savedOffer = null;
 let websocketArray = [];
-
 webSocketServer.on('connection', (newSocket) => {
   console.log('A new user has connected to the WebSocket.');
 
