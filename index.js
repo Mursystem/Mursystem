@@ -13,7 +13,7 @@ webSocketServer.on('connection', (newSocket) => {
 
   newSocket.on('message', (message) => {
     let parsedMessage = JSON.parse(message);
-    onsole.log(parsedMessage);
+    console.log(parsedMessage);
     if (parsedMessage.type === 'room') {
       // Check if the peer has already connected
       if (isPeerConnected(parsedMessage.room, parsedMessage.role)) {
