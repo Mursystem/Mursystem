@@ -13,7 +13,7 @@ webSocketServer.on('connection', (newSocket) => {
 
   newSocket.on('message', (message) => {
     let parsedMessage = JSON.parse(message);
-
+    onsole.log(parsedMessage);
     if (parsedMessage.type === 'room') {
       // Check if the peer has already connected
       if (isPeerConnected(parsedMessage.room, parsedMessage.role)) {
@@ -21,8 +21,6 @@ webSocketServer.on('connection', (newSocket) => {
         newSocket.close();
         return;
       }
-      console.log(parsedMessage.room);
-      console.log(parsedMessage.role);
       // Add the WebSocket instance to the websocketArray
       websocketArray.push({ id: parsedMessage.room, socket: newSocket, role: parsedMessage.role, ready: false });
       newSocket.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the room!', role: parsedMessage.role }));
@@ -36,7 +34,7 @@ webSocketServer.on('connection', (newSocket) => {
       sendMessageToWebSocket(parsedMessage.room, msgToSend, "host");
     }
     if (parsedMessage.type === 'requestNewOffer') {
-      msgToSend = JSON.stringify({ type: 'request'});
+      msgToSend = JSON.stringify({ type: 'request' });
       sendMessageToWebSocket(parsedMessage.room, msgToSend, "host");
     }
     if (parsedMessage.type === 'ready') {
