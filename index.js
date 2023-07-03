@@ -33,6 +33,10 @@ webSocketServer.on('connection', (newSocket) => {
       msgToSend = JSON.stringify({ type: 'request' });
       sendMessageToWebSocket(parsedMessage.room, msgToSend, "host");
     }
+    if (parsedMessage.type === 'candidateFromLocal') {
+      msgToSend = JSON.stringify({ type: 'candidateFromServer', candidate: parsedMessage.candidate });
+      sendMessageToWebSocket(parsedMessage.room, msgToSend, "client");
+    }
     if (parsedMessage.type === 'ready') {
       console.log(parsedMessage.role, "is ready!");
       // Find the WebSocket connection object in the array and update its ready property
