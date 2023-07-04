@@ -55,8 +55,19 @@ webSocketServer.on('connection', (newSocket) => {
       }
     }
   });
+  
+  newSocket.on('close', () => {
+    console.log('A user has disconnected from the WebSocket and will be removed.');
+    console.log(websocketArray);
+    removeWebSocketBySocket(newSocket);
+    console.log(websocketArray);
+  });
+
 });
 
+function removeWebSocketBySocket(socket) {
+  websocketArray = websocketArray.filter(item => item.socket !== socket);
+}
 function checkBothReady(roomName) {
   // Find the WebSocket connections for the current role and opposite role in the same room
   var clientStatus = websocketArray.filter(item => item.id === roomName && item.role === 'client' && item.ready === true);
